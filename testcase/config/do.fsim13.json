@@ -1,0 +1,61 @@
+{
+  "timelimit": 30,
+  "evalList": [
+    {
+      "type": "cmd",
+      "__cmd": "cirr sim13.aag",
+      "score": 0,
+      "method": "skip"
+    },
+    {
+      "type": "cmd",
+      "__cmd": "cirsim -file pattern.13 -out fsim13.log",
+      "score": 0,
+      "method": "skip"
+    },
+    {
+      "type": "misc",
+      "score": 10,
+      "method": "filediff",
+      "need_ref_dir": true,
+      "need_stu_dir": true,
+      "args": {
+        "filename": "fsim13.log"
+      }
+    },
+    {
+      "type": "cmd",
+      "__cmd": "cirp -fec",
+      "score": 5,
+      "method": "diff"
+    },
+    {
+      "type": "cmd",
+      "__cmd": "cirg 36000",
+      "score": 5,
+      "method": "diff",
+      "args": {
+        "regexp": "= FECs:.*"
+      }
+    },
+    {
+      "type": "cmd",
+      "__cmd": "usage",
+      "score": 0,
+      "method": "timepenalty",
+      "args": {
+        "min_val": 2.0,
+        "max_val": 5.0,
+        "min_penalty": 0.0,
+        "max_penalty": 1.0,
+        "relative": true
+      }
+    },
+    {
+      "type": "cmd",
+      "__cmd": "q -f",
+      "score": 0,
+      "method": "skip"
+    }
+  ]
+}

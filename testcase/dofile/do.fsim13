@@ -1,0 +1,6 @@
+cirr sim13.aag
+cirsim -file pattern.13 -out fsim13.log
+cirp -fec
+cirg 36000
+usage
+q -f
