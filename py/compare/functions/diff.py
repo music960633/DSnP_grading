@@ -21,14 +21,14 @@ class DiffCmp(base.BaseCmp):
       Tuple (1, 0, stat.STAT_OK) if the filtered ref_out and stu_out match,
       otherwise return (0, 0, stat.STAT_DIFF).
     """
-    ref_match = re.findall(regexp, '\n'.join(ref_out))
-    stu_match = re.findall(regexp, '\n'.join(stu_out))
+    ref_match = [s for s in re.findall(regexp, '\n'.join(ref_out)) if s != '']
+    stu_match = [s for s in re.findall(regexp, '\n'.join(stu_out)) if s != '']
     if sort is True:
       ref_match = sorted(ref_match)
       stu_match = sorted(stu_match)
     if strict is False:
-      ref_match = [re.sub(r'\s*', ' ', s) for s in ref_match]
-      stu_match = [re.sub(r'\s*', ' ', s) for s in stu_match]
+      ref_match = [re.sub(r'\s+', ' ', s) for s in ref_match]
+      stu_match = [re.sub(r'\s+', ' ', s) for s in stu_match]
     if ref_match == stu_match:
       return (1, 0, stat.STAT_OK)
     else:

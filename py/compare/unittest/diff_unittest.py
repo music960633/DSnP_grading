@@ -36,11 +36,16 @@ class DiffTest(unittest.TestCase):
                      (1, 0, stat.STAT_OK))
 
   def testStrict(self):
-    ref_out = ['a', 'b', 'c d']
-    stu_out = ['a ', ' b', 'c  d']
+    ref_out = ['a b']
+    stu_out = ['a  b']
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out), (1, 0, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out, strict=True),
                      (0, 0, stat.STAT_DIFF))
+
+  def testExtraSpace(self):
+    self.assertEqual(self.cls.cmpCmd(['ab'], ['a b']), (0, 0, stat.STAT_DIFF))
+    self.assertEqual(self.cls.cmpCmd(['a b'], ['ab']), (0, 0, stat.STAT_DIFF))
+
   
 
 if __name__ == '__main__':
