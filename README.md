@@ -18,7 +18,9 @@ Before grading, these files should be prepared:
 * Modify constants in *py/dsnp_setting.py* (*HW_SUFFIX*, *REF_EXE*,
   *STUDENT_EXE* and *PROMPT*)
 * Put the reference program in *ref/ directory*. The executable should be
-  *ref/&lt;ref_exe&gt;*
+  *ref/&lt;ref_exe&gt;*. The default ref program *ref/fraig-ref* is an older
+  Linux version of fraig. Change it if you are using macOS or want to use the
+  latest version.
 * Put the student programs in *student/&lt;student_id&gt;&lt;hw_suffix&gt;*
   directory. The executables should be
       *student/&lt;student_id&gt;&lt;hw_suffix&gt;/&lt;student_exe&gt;*
