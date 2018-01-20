@@ -25,6 +25,17 @@ class FileDiffTest(unittest.TestCase):
   def tearDown(self):
     shutil.rmtree(self.tempdir)
 
+  def testNofile(self):
+    ref_content = 'meow'
+    filename = 'testnofile.out'
+    self.writeRefFile(filename, ref_content)
+    kargs = {
+      'ref_dir': self.ref_dir,
+      'stu_dir': self.stu_dir,
+      'filename': filename
+    }
+    self.assertEqual(self.cls.cmpMisc(**kargs), (0, 0, stat.STAT_NOFILE))
+
   def testSame(self):
     ref_content = 'aaa\nbbb\n'
     stu_content = 'aaa\nbbb\n'
@@ -32,8 +43,8 @@ class FileDiffTest(unittest.TestCase):
     self.writeRefFile(filename, ref_content)
     self.writeStuFile(filename, stu_content)
     kargs = {
-      'ref_dir': self.stu_dir,
-      'stu_dir': self.ref_dir,
+      'ref_dir': self.ref_dir,
+      'stu_dir': self.stu_dir,
       'filename': filename
     }
     self.assertEqual(self.cls.cmpMisc(**kargs), (1, 0, stat.STAT_OK))
@@ -45,8 +56,8 @@ class FileDiffTest(unittest.TestCase):
     self.writeRefFile(filename, ref_content)
     self.writeStuFile(filename, stu_content)
     kargs = {
-      'ref_dir': self.stu_dir,
-      'stu_dir': self.ref_dir,
+      'ref_dir': self.ref_dir,
+      'stu_dir': self.stu_dir,
       'filename': filename
     }
     self.assertEqual(self.cls.cmpMisc(**kargs), (0, 0, stat.STAT_DIFF))

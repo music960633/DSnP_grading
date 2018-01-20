@@ -23,7 +23,7 @@ class FileDiffCmp(base.BaseCmp):
     stu_file = os.path.join(stu_dir, filename)
     assert os.path.exists(ref_file), 'Ref file %s does not exist!' % ref_file
     if not os.path.exists(stu_file):
-      return (0, stat.STAT_NOFILE)
+      return (0, 0, stat.STAT_NOFILE)
     ret = os.system('diff -q %s %s >/dev/null' % (ref_file, stu_file))
     if ret == 0:
       return (1, 0, stat.STAT_OK)
