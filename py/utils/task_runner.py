@@ -76,7 +76,7 @@ class TaskRunner(object):
       if self.event.isSet():
         self.killAllTask()
       pid, status = os.waitpid(-1, os.WNOHANG)
-      if pid != 0:
+      if pid != 0 and pid in self.running_task:
         name, task = self.running_task.pop(pid)
         self.done += 1
         message = '[%d/%d] %s' % (self.done, self.tot, name)
