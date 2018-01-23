@@ -45,9 +45,10 @@ class Task(object):
 
 
 class TaskRunner(object):
-  def __init__(self, task_list, parallel_num):
+  def __init__(self, task_list, parallel_num, show_progress=True):
     self.task_list = task_list
     self.parallel_num = parallel_num
+    self.show_progress = show_progress
     self.running_task = {}
     self.event = threading.Event()
     self.tot = len(task_list)
@@ -83,10 +84,11 @@ class TaskRunner(object):
           task.retcode = os.WEXITSTATUS(status)
         else:
           task.retcode = -1
-        if task.retcode == 0:
-          self.messageNormal(message)
-        else:
-          self.messageError(message)
+        if self.show_progress:
+          if task.retcode == 0:
+            self.messageNormal(message)
+          else:
+            self.messageError(message)
       else:
         self.event.wait(0.1)
 
