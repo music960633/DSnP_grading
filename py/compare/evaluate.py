@@ -19,32 +19,24 @@ class Evaluator:
     self.stu_out_path = os.path.join(dsnp.STU_OUT_DIR, student,
                                      case + dsnp.OUT_SUFFIX)
     self.config_path = os.path.join(dsnp.CONFIG_DIR, case + dsnp.JSON_SUFFIX)
-    self.tot_score = 0.0
-    self.tot_penalty = 0.0
-    self.tot_status = stat.STAT_OK
     assert os.path.exists(self.ref_out_path), (
         'Ref output of %s does not exist!' % self.case)
     assert os.path.exists(self.config_path), (
         'Config file of %s does not exist!' % self.case)
 
   def getScoreAndStatus(self):
-    assert self.tot_penalty == 0
     return (self.tot_score, self.tot_status)
 
   def initialize(self):
     self.tot_score = 0
-    self.tot_penalty = 0
     self.tot_status = stat.STAT_OK
+    self.eval_results = []
 
-  def updateStatus(self, status):
-    if self.tot_status == stat.STAT_OK:
-      self.tot_status = status
-
-  def applyPenalty(self):
-    self.tot_score *= (1 - self.tot_penalty)
-    self.tot_penalty = 0
-    # round the score to integer
-    self.tot_score = int(self.tot_score + 0.5)
+  def checkConsistency(self, sub_config, ref_sub_out, stu_sub_out):
+    if '__cmd' in sub_config:
+      prompt_cmd = dsnp.PROMPT + ' ' + sub_config['__cmd']
+      assert ref_sub_out[0] == prompt_cmd
+      assert stu_sub_out[0] == prompt_cmd
 
   def runDofileScore(self):
     """Calculates the total score, status for a dofile output and store them
@@ -53,7 +45,7 @@ class Evaluator:
     self.initialize()
     # No student output
     if not os.path.exists(self.stu_out_path):
-      self.updateStatus(stat.STAT_NOFILE)
+      self.tot_status = stat.STAT_NOFILE
       return
     # Read config and check must exist fields
     with open(self.config_path) as f:
@@ -73,24 +65,18 @@ class Evaluator:
       if eval_config['type'] == 'cmd':
         # special case: missing output (e.g. segment fault). timeout and memout
         if cmd_idx >= len(stu_out):
-          self.updateStatus(stat.STAT_MISSING)
-          break
-        if 'TIMEOUT' in stu_out[cmd_idx]:
-          self.updateStatus(stat.STAT_TIMEOUT)
-          break
-        if 'MEMOUT' in stu_out[cmd_idx]:
-          self.updateStatus(stat.STAT_MEMOUT)
-          break
-        # check consistency
-        if '__cmd' in eval_config:
-          prompt_cmd = dsnp.PROMPT + ' ' + eval_config['__cmd']
-          assert ref_out[cmd_idx][0] == prompt_cmd
-          assert stu_out[cmd_idx][0] == prompt_cmd
-        # use given method to evaluate
-        self.tot_score, self.tot_penalty, self.tot_status = cls.evalCmd(
-            self.tot_score, self.tot_penalty, self.tot_status,
-            eval_config['score'], ref_out[cmd_idx], stu_out[cmd_idx], **kargs)
-        cmd_idx += 1
+          eval_result = (0, 0, stat.STAT_MISSING)
+        elif 'TIMEOUT' in stu_out[cmd_idx]:
+          eval_result = (0, 0, stat.STAT_TIMEOUT)
+        elif 'MEMOUT' in stu_out[cmd_idx]:
+          eval_result = (0, 0, stat.STAT_MEMOUT)
+        else:
+          # check consistency
+          self.checkConsistency(eval_config, ref_out[cmd_idx], stu_out[cmd_idx])
+          # use given method to evaluate
+          eval_result = cls.evalCmd(
+              eval_config['score'], ref_out[cmd_idx], stu_out[cmd_idx], **kargs)
+          cmd_idx += 1
       elif eval_config['type'] == 'misc':
         # special field: 'need_ref_dir', 'need_stu_dir'
         if eval_config.get('need_ref_dir', False) is True:
@@ -98,10 +84,22 @@ class Evaluator:
         if eval_config.get('need_stu_dir', False) is True:
           kargs.update({'stu_dir': os.path.join(dsnp.STU_OUT_DIR, self.stu)})
         # use given method to evaluate
-        self.tot_score, self.tot_penalty, self.tot_status = cls.evalMisc(
-            self.tot_score, self.tot_penalty, self.tot_status,
-            eval_config['score'], **kargs)
-    self.applyPenalty()
+        eval_result = cls.evalMisc(eval_config['score'], **kargs)
+
+      self.eval_results.append(eval_result)
+
+    # calculate total score
+    self.calcTotScore()
+
+  def calcTotScore(self):
+    tot_penalty = 0
+    for score, penalty, status in self.eval_results:
+      self.tot_score += score
+      tot_penalty = min(1.0, tot_penalty + penalty)
+      if self.tot_status == stat.STAT_OK:
+        self.tot_status = status
+    self.tot_score *= (1 - tot_penalty)
+    self.tot_score = int(self.tot_score + 0.5)
 
 
 def checkConfig(config):
