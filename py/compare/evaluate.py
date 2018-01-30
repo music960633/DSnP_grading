@@ -31,6 +31,7 @@ class Evaluator:
     self.tot_score = 0
     self.tot_status = stat.STAT_OK
     self.eval_results = []
+    self.label_map = {}
 
   def checkConsistency(self, sub_config, ref_sub_out, stu_sub_out):
     if '__cmd' in sub_config:
@@ -86,18 +87,41 @@ class Evaluator:
         # use given method to evaluate
         eval_result = cls.evalMisc(eval_config['score'], **kargs)
 
-      self.eval_results.append(eval_result)
+      self.updateResult(eval_config, eval_result)
+      self.setLabel(eval_config, eval_result)
 
     # calculate total score
     self.calcTotScore()
 
+  def updateResult(self, config, result):
+    """Append a result dict to eval_results."""
+    require = config.get('require', [])
+    if isinstance(require, basestring):
+      require = [require]
+    result_dict = {
+        'result': result,
+        'require': require
+    }
+    self.eval_results.append(result_dict)
+
+  def setLabel(self, config, result):
+    """Insert a label to label_map."""
+    if 'label' in config:
+      label = config['label']
+      assert'label' not in self.label_map, 'Duplicate label %s' % label
+      self.label_map[label] = result
+
   def calcTotScore(self):
+    """Calculate final score."""
     tot_penalty = 0
-    for score, penalty, status in self.eval_results:
-      self.tot_score += score
-      tot_penalty = min(1.0, tot_penalty + penalty)
-      if self.tot_status == stat.STAT_OK:
-        self.tot_status = status
+    for result_dict in self.eval_results:
+      score, penalty, status = result_dict['result']
+      require = result_dict['require']
+      if all([self.label_map[label][2] == stat.STAT_OK for label in require]):
+        self.tot_score += score
+        tot_penalty = min(1.0, tot_penalty + penalty)
+        if self.tot_status == stat.STAT_OK:
+          self.tot_status = status
     self.tot_score *= (1 - tot_penalty)
     self.tot_score = int(self.tot_score + 0.5)
 
@@ -109,6 +133,8 @@ def checkConfig(config):
     3. For each subconfigs in 'evalList' for subcommands:
       a. 'type', 'score', 'method' must exist in subconfig.
       b. type of subconfig should be either 'cmd' or 'misc'.
+    4. Should not have duplicate labels, and 'require' should not contain
+       unknown labels.
   """
   for key in ['timelimit', 'evalList']:
     assert key in config, (
@@ -119,6 +145,18 @@ def checkConfig(config):
           'Missing "%s" in config "%s".' % (key, os.path.basename(config_path)))
     assert eval_config['type'] in ['cmd', 'misc'], (
         'Unknown eval type: %s.' % eval_config['type'])
+  label_set = set()
+  for eval_config in config['evalList']:
+    if 'label' in eval_config:
+      label = eval_config['label']
+      assert label not in label_set, (
+          'Duplicate label %s.' % label)
+      label_set.add(label)
+    require = eval_config.get('require', [])
+    if isinstance(require, basestring):
+      require = [require]
+    for label in require:
+      assert label in label_set, 'Unknown require label %s.' % label
 
 
 def readAndSplitByPrompt(filename, prompt):
