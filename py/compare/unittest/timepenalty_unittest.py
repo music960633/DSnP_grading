@@ -28,9 +28,9 @@ class TimePenaltyTest(unittest.TestCase):
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_med1, **kargs),
                      (0, -0.25, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_med2, **kargs),
-                     (0, 0.5, stat.STAT_PENALTY))
+                     (0, 0.5, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_slow, **kargs),
-                     (0, 1.0, stat.STAT_PENALTY))
+                     (0, 1.0, stat.STAT_OK))
   
   def testRelative(self):
     ref_out = ['Total time used : 10 seconds']
@@ -50,9 +50,9 @@ class TimePenaltyTest(unittest.TestCase):
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_med1, **kargs),
                      (0, -0.25, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_med2, **kargs),
-                     (0, 0.5, stat.STAT_PENALTY))
+                     (0, 0.5, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_slow, **kargs),
-                     (0, 1.0, stat.STAT_PENALTY))
+                     (0, 1.0, stat.STAT_OK))
 
 
 if __name__ == '__main__':

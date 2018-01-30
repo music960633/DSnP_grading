@@ -35,8 +35,7 @@ class TimePenaltyCmp(base.BaseCmp):
 
     Returns:
       Tuple (0, 1, stat.ERROR) if student time is not found. Otherwise return
-      (0, penalty, status), where status is stat.STAT_PENALTY if penalty is
-      greater than 0, otherwise stat.STAT_OK.
+      (0, penalty, stat.STAT_OK)
 
     """
     if relative is True:
@@ -62,5 +61,4 @@ class TimePenaltyCmp(base.BaseCmp):
       slope = float(max_penalty - min_penalty) / float(max_time - min_time)
       penalty = min_penalty + slope * (stu_time - min_time)
     
-    status = stat.STAT_PENALTY if penalty > 0 else stat.STAT_OK
-    return (0, penalty, status)
+    return (0, penalty, stat.STAT_OK)

@@ -22,9 +22,9 @@ class QualityPenaltyTest(unittest.TestCase):
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_same, y=10),
                      (0, 0, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_med, y=10),
-                     (0, 0.5, stat.STAT_PENALTY))
+                     (0, 0.5, stat.STAT_OK))
     self.assertEqual(self.cls.cmpCmd(ref_out, stu_out_bad, y=10),
-                     (0, 1.1, stat.STAT_PENALTY))
+                     (0, 1.1, stat.STAT_OK))
 
   def testException(self):
     ref_out = ['Total meow']

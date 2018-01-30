@@ -122,8 +122,14 @@ class Evaluator:
         tot_penalty = min(1.0, tot_penalty + penalty)
         if self.tot_status == stat.STAT_OK:
           self.tot_status = status
-    self.tot_score *= (1 - tot_penalty)
-    self.tot_score = int(self.tot_score + 0.5)
+
+    # apply penalty
+    if tot_penalty > 0:
+      # status can be penalty only if all the tests passed
+      if self.tot_status == stat.STAT_OK:
+        self.tot_status = stat.STAT_PENALTY
+      self.tot_score *= (1 - tot_penalty)
+      self.tot_score = int(self.tot_score + 0.5)
 
 
 def checkConfig(config):
