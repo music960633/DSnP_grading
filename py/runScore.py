@@ -10,11 +10,22 @@ from utils import parse_util
 from compare import evaluate
 from compare import stat
 
+def normalize(case_list):
+  for i, case in enumerate(case_list):
+    if isinstance(case, basestring):
+      case_list[i] = {
+          'case': case,
+          'require': []
+      }
+    elif isinstance(case['require'], basestring):
+      case['require'] = [case['require']]
+
+
 def genHeader(score_table, case_list):
   """Generate CSV header."""
   header = ['Student ID']
-  for case in case_list:
-    header.append(case)
+  for case_dict in case_list:
+    header.append(case_dict['case'])
     header.append('Status')
   header.append('Total')
   score_table.append(header)
@@ -26,14 +37,22 @@ def genStudent(score_table, student, case_list):
   student_output_dir = os.path.join(dsnp.STU_OUT_DIR, student)
   # Get score for each case
   tot = 0
-  for case in case_list:
+  status_dict = {}
+  for case_dict in case_list:
+    case = case_dict['case']
+    require = case_dict['require']
     print '[%s] Scoring %s' % (student, case)
-    evaluator = evaluate.Evaluator(student, case)
-    evaluator.runDofileScore()
-    val, stat = evaluator.getScoreAndStatus()
+    passed = lambda status: status in [stat.STAT_OK, stat.STAT_PENALTY]
+    if all([passed(status_dict[name]) for name in require]):
+      evaluator = evaluate.Evaluator(student, case)
+      evaluator.runDofileScore()
+      val, status = evaluator.getScoreAndStatus()
+    else:
+      val, status = 0, stat.STAT_BLOCKED
     tot += val
     score.append(str(val))
-    score.append(stat)
+    score.append(status)
+    status_dict[case] = status
   score.append(str(tot))
   score_table.append(score)
 
@@ -42,7 +61,8 @@ def genMaxScore(score_table, case_list):
   """Generate max score for each dofiles."""
   header = ['Max score']
   tot_score = 0
-  for case in case_list:
+  for case_dict in case_list:
+    case = case_dict['case']
     config_path = os.path.join(dsnp.CONFIG_DIR, case + dsnp.JSON_SUFFIX)
     with open(config_path, 'r') as f:
       config = json.load(f)
@@ -84,6 +104,7 @@ def main():
 
   # Read case_list and student_list
   case_list = parse_util.parseJsonFromFile(args.case_list_json)
+  normalize(case_list)
   student_list = parse_util.parseJsonFromFile(args.student_list_json)
 
   # generate score
